@@ -1,9 +1,9 @@
 """Dynamic Multi-objective Optimization Problems
 This Library is a GTA(a and m) benchmarks from the website of the author,
 and the implementation of the FDA, DIMP, DMOP, HE benchmarks of the CEC2015 competition
-nt: feverity of change
+nt: severity of change
 taut: frequency of change
-tauT: maximum nomber of generation
+tauT: maximum number of generation
 tau : current generation
 
 """
@@ -444,12 +444,10 @@ def DB12m(x, t):
     else:
         raise Exception(ERR_MSG)
 
-def FDA4(X, tau, nt, taut):
+def FDA4(X, t):
     """FDA4 dynamic benchmark problem
     """
     XII = X[2:]
-    t = float(1)/float(nt)
-    t = t*floor(float(tau)/float(taut))
     G = fabs(sin(0.5*pi*t))
     g = sum([ pow(xi-G,2) for xi in XII ])
     f1 = (1+g)*cos(X[0]*pi/2)*cos(X[1]*pi/2)
@@ -457,12 +455,10 @@ def FDA4(X, tau, nt, taut):
     f3 = (1+g)*sin(X[0]*pi/2)
     return [f1, f2, f3]
 
-def FDA5(X, tau, nt, taut):
+def FDA5(X, t):
     """FDA5 dynamic benchmark problem
     """
     XII = X[2:]
-    t = float(1)/float(nt)
-    t = t*floor(float(tau)/float(taut))
     G = fabs(sin(0.5*pi*t))
     g = G + sum([ pow(xi-G,2) for xi in XII ])
     F = 1 + 100*pow(sin(0.5*pi*t),4)
@@ -472,13 +468,11 @@ def FDA5(X, tau, nt, taut):
     f3 = (1+g)*sin(y(0)*pi/2)
     return [f1, f2, f3]
 
-def DIMP2(X, tau, nt, taut):
+def DIMP2(X, t):
     """DIMP2 dynamic benchmark problem
     """
     n = len(X)
     XII=X[1:]
-    t = float(1)/float(nt)
-    t = t*floor(float(tau)/float(taut))
     g = 1.0 + 2.0*(len(XII))
     for k in range(1,n):
         G = sin( pow(0.5*pi*t + 2.0*pi*float(k+1)/float(n+1.0), 2) )
@@ -488,12 +482,10 @@ def DIMP2(X, tau, nt, taut):
     f2 = g*h
     return [f1, f2]
 
-def dMOP2(X,tau,nt,taut):
+def dMOP2(X,t):
     """dMOP2 dynamic benchmark problem
     """
     XII = X[1:]
-    t = float(1)/float(nt)
-    t = t*floor(float(tau)/float(taut))
     G = sin(0.5*pi*t)
     g = 1 + 9*sum([pow(xi-G,2) for xi in XII])
     H = 0.75*sin(0.5*pi*t) + 1.25
@@ -505,7 +497,7 @@ def dMOP2(X,tau,nt,taut):
 def dMOP3(X,tau,nt,taut,r,rIteration):
     """dMOP3 dynamic benchmark problem
     """
-    if tau % taut == 0 and rIteration != tau :
+    if tau % taut == 0 and rIteration != tau:
         r = randint(0,9)
         rIteration = tau
 
@@ -520,13 +512,11 @@ def dMOP3(X,tau,nt,taut,r,rIteration):
     return [f1, f2, r, rIteration]
 
 
-def HE2(X,tau,nt,taut):
+def HE2(X,t):
     """HE2 dynamic benchmark problem
     """
     n = 30
     XII = X[1:]
-    t =float(1)/float(nt)
-    t =t*floor(float(tau)/float(taut))
     H =0.75*sin(0.5*pi*t) + 1.25
     g = 1 + (9/(n-1))*sum(XII)
     f1 = X[0]
@@ -534,12 +524,9 @@ def HE2(X,tau,nt,taut):
     f2 = g*h
     return [f1,f2]
 
-def HE7(X,tau,nt,taut):
+def HE7(X,t):
     """HE7 dynamic benchmark problem
     """
-    t =float(1)/float(nt)
-    t =t*floor(float(tau)/float(taut))
-
     def _f1(input1):
         value = input1[0]
         ssum = 0.0
@@ -571,11 +558,9 @@ def HE7(X,tau,nt,taut):
     return [f1,f2]
 
 
-def HE9(X,tau,nt,taut):
+def HE9(X, t):
     """HE9 dynamic benchmark problem
     """
-    t =float(1)/float(nt)
-    t =t*floor(float(tau)/float(taut))
 
     def _f1(input1):
         value = input1[0]

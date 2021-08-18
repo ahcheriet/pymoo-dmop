@@ -60,15 +60,15 @@ class DMOP2(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def get_current_t(self, algorithm):
-        self.tau = algorithm.n_gen
+    def get_current_t(self, n_gen):
+        self.tau = n_gen
         t = 1 / self.nt
         t = t * floor(self.tau / self.taut)
         return t
 
     def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
-        self.t = self.get_current_t(self, algorithm)
-        f1, f2 = dMOP2(X, self.tau, self.nt, self.taut)
+        self.t = self.get_current_t(algorithm.n_gen)
+        f1, f2 = dMOP2(X, self.t)
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
@@ -94,11 +94,15 @@ class DIMP2b(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
-        self.tau = algorithm.n_gen
+    def get_current_t(self, n_gen):
+        self.tau = n_gen
         t = 1 / self.nt
-        self.t = t * floor(self.tau / self.taut)
-        f1, f2 = DIMP2(X, self.tau, self.nt, self.taut)
+        t = t * floor(self.tau / self.taut)
+        return t
+
+    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
+        self.t = self.get_current_t(algorithm.n_gen)
+        f1, f2 = DIMP2(X, self.t)
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
@@ -122,14 +126,19 @@ class HE2b(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def _evaluate(self, X, out, *args, **kwargs):
-        f1, f2 = HE2(X, self.tau, self.nt, self.taut)
+    def get_current_t(self, n_gen):
+        self.tau = n_gen
+        t = 1 / self.nt
+        t = t * floor(self.tau / self.taut)
+        return t
+
+    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
+        self.t = self.get_current_t(algorithm.n_gen)
+        f1, f2 = HE2(X, self.t)
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
-        t = 1/self.nt
-        t = t * floor(self.tau/self.taut)
-        H = 0.75 * sin(0.5 * pi * t) + 1.25
+        H = 0.75 * sin(0.5 * pi * self.t) + 1.25  # time may be incorrect
         x = anp.linspace(0, 1, n_pareto_points)
         f2 = (1-np.power(np.sqrt(x), H))-(np.power(x, H)*np.sin(0.5*pi*x))
         pf = anp.column_stack([x, f2])
@@ -152,14 +161,19 @@ class HE7b(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def _evaluate(self, X, out, *args, **kwargs):
-        f1, f2 = HE7(X, self.tau, self.nt, self.taut)
+    def get_current_t(self, n_gen):
+        self.tau = n_gen
+        t = 1 / self.nt
+        t = t * floor(self.tau / self.taut)
+        return t
+
+    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
+        self.t = self.get_current_t(algorithm.n_gen)
+        f1, f2 = HE7(X, self.t)
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
-        t = 1/self.nt
-        t = t * floor(self.tau/self.taut)
-        H = 0.75 * sin(0.5 * pi * t) + 1.25
+        H = 0.75*sin(0.5*pi*self.t)+1.25  # current time may be incorrect
         x = anp.linspace(0, 1, n_pareto_points)
         f2 = (2-np.sqrt(x))*(1-np.power(x/(2-np.sqrt(x)),H))
         pf = anp.column_stack([x, f2])
@@ -181,14 +195,19 @@ class HE9b(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def _evaluate(self, X, out, *args, **kwargs):
-        f1, f2 = HE9(X, self.tau, self.nt, self.taut)
+    def get_current_t(self, n_gen):
+        self.tau = n_gen
+        t = 1 / self.nt
+        t = t * floor(self.tau / self.taut)
+        return t
+
+    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
+        self.t = self.get_current_t(algorithm.n_gen)
+        f1, f2 = HE9(X, self.t)
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
-        t = 1/self.nt
-        t = t * floor(self.tau/self.taut)
-        H = 0.75 * sin(0.5 * pi * t) + 1.25
+        H = 0.75 * sin(0.5 * pi * self.t) + 1.25 # current time may be incorrect
         x = anp.linspace(0, 1, n_pareto_points)
         f2 = (2-np.sqrt(x))*(1-np.power(x/(2-np.sqrt(x)),H))
         pf = anp.column_stack([x, f2])
@@ -229,7 +248,6 @@ PF = []
 def callback(ex_algorithm):
     if (ex_algorithm.problem.tau+1) % ex_algorithm.problem.taut == 0:
         PF.append(ex_algorithm.problem.get_pf_t())  # pareto_front()
-        print(ex_algorithm.pop[ex_algorithm.pop.get("rank") == 0])
 
 
 algorithm.callback = callback
