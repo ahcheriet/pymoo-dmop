@@ -21,17 +21,24 @@ nt_ = 5
 taut_ = 10
 tauT = 200
 
+# TODO use an abstract class for all dynamic problems
 
 class DynamicMOP(Problem):
+    """
+    abstract class for a dynamic multi-objective problem
+
+    """
+
     def __init__(self, n_var, n_obj, nt=nt_, taut=taut_):
-        super().__init__(n_var=n_var, n_obj=n_obj, n_constr=0, xl=0, xu=1, type_var=anp.double)
+        super().__init__(n_var=n_var, n_obj=n_obj, xl=0, xu=1)
         self.nt = nt
         self.taut = taut
         self.tau = 0 # current iteration
 
     def get_current_t(self):
         t = 1 / self.nt
-        self.t = t * floor(self.tau / self.taut)
+        t = t * floor(self.tau / self.taut)
+        return t
 
     def _calc_pareto_front(self, n_pareto_points=100):
         pass
@@ -53,10 +60,14 @@ class DMOP2(Problem):
         self.taut = taut
         self.tau = 0 # current iteration
 
-    def _evaluate(self, X, out, *args,algorithm=None, **kwargs):
+    def get_current_t(self, algorithm):
         self.tau = algorithm.n_gen
         t = 1 / self.nt
-        self.t = t * floor(self.tau / self.taut)
+        t = t * floor(self.tau / self.taut)
+        return t
+
+    def _evaluate(self, X, out, *args, algorithm=None, **kwargs):
+        self.t = self.get_current_t(self, algorithm)
         f1, f2 = dMOP2(X, self.tau, self.nt, self.taut)
         out["F"] = [f1, f2]
 
