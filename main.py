@@ -1,16 +1,13 @@
-import numpy as np
 import autograd.numpy as anp
-from pymoo.util.normalization import normalize
-from pymoo.algorithms.nsga2 import NSGA2
-from pymoo.model.problem import Problem
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.core.problem import Problem, ElementwiseProblem
 from pymoo.optimize import minimize
 from pymoo.visualization.scatter import Scatter
-from math import floor,sin,pi
-from pymoo.problems.many import dtlz
 import matplotlib.pyplot as plt
-from pymoo.performance_indicator.igd import IGD
+#from pymoo.performance_indicator.igd import IGD
 from dproblems import *
 from CEC2018 import *
+from pymoo.factory import get_performance_indicator
 
 # nt: severity of change
 # taut: frequency of change
@@ -47,15 +44,14 @@ class DynamicMOP(Problem):
         return self._calc_pareto_front()
 
 
-class DMOP2(Problem):
+class DMOP2(ElementwiseProblem):
     """DMOP2 dynamic benchmark problem
     """
     def __init__(self, nt=nt_, taut=taut_):
         super().__init__(n_var=10,
                          n_obj=2,
                          xl=0,
-                         xu=1,
-                         elementwise_evaluation=True)
+                         xu=1)
         self.nt = nt
         self.taut = taut
         self.tau = 0 # current iteration
@@ -275,10 +271,12 @@ for algorithm in res.history:
 
 igd = []
 # this is to calculate the IGD every time the problem changes.
+
 for idx, pf in enumerate(PF):
     normalize = False
-    metric = IGD(pf=pf, normalize=normalize)
-    igd = igd + [metric.calc(f) for f in F[idx*taut_:(idx*taut_+taut_)]]
+    metric = get_performance_indicator("igd", pf)
+    #IGD(pf=pf, normalize=normalize)
+    igd = igd + [metric.do(f) for f in F[idx*taut_:(idx*taut_+taut_)]]
 
 print(np.mean(igd))
 plt.plot(n_gen, igd, '-o', markersize=4, linewidth=2, color="green")
