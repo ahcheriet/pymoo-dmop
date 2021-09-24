@@ -589,6 +589,3 @@ def HE9(X, t):
     h = 1-pow(f1/g,H)
     f2 = g*h
     return [f1,f2]
-
-if __name__ == '__main__':
-    print(__doc__)
