@@ -16,8 +16,8 @@ taut_ = 10
 tauT = 200
 
 
-algorithm = DNSGA2_a(pop_size=200)
-problem = HE2b(nt=nt_, taut=taut_)
+algorithm = DNSGA2_a(pop_size=100)
+problem = FDA2_deb(nt=nt_, taut=taut_)
 
 PF = []
 
@@ -57,7 +57,6 @@ igd = []
 for idx, pf in enumerate(PF):
     normalize = False
     metric = get_performance_indicator("igd", pf)
-    #IGD(pf=pf, normalize=normalize)
     igd = igd + [metric.do(f) for f in F[idx*taut_:(idx*taut_+taut_)]]
 
 print(anp.mean(igd))

@@ -444,6 +444,18 @@ def DB12m(x, t):
     else:
         raise Exception(ERR_MSG)
 
+
+def fda2_deb(x, t):
+    f1 = x[0]
+    H = 2 * np.sin(0.5 * np.pi * (t - 1))
+    XII = x[1:6]
+    XIII = x[6:13]
+    g = 1 + np.sum(np.power(XII, 2))
+    Htemp = np.sum(np.power((XIII - H / 4), 2))
+    h = 1 - np.power((f1 / g), np.power(2, H + Htemp))
+    f2 = g * h
+    return [f1, f2]
+
 def FDA4(X, t):
     """FDA4 dynamic benchmark problem
     """
