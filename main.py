@@ -17,7 +17,7 @@ tauT = 200
 
 
 algorithm = DNSGA2_a(pop_size=100)
-problem = FDA2_deb(nt=nt_, taut=taut_)
+problem = DMOP2(nt=nt_, taut=taut_)
 
 PF = []
 

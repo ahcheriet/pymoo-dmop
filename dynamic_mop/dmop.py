@@ -63,11 +63,12 @@ class FDA2_deb(DynamicMOP):
         out["F"] = [f1, f2]
 
     def _calc_pareto_front(self, n_pareto_points=100):
+        H = 0.75 + 0.75 * np.sin(0.5*np.pi*self.t)
         H = 2 * np.sin(0.5 * np.pi * (self.t - 1))
-        x = np.linspace(0, 1, n_pareto_points)
-# TODO Solve the inf result when x[0] = 0
-        print(H, x[0] ,(1-np.power(x, (1/H)))[0],self.t)
-        pf = anp.column_stack([x, 1-np.power(x, (1/H))])
+        x = np.linspace(0.01, 1, n_pareto_points)
+# TODO Solve the inf result when x[0] = 0 and H(t)<0
+        print(H, x[0], (1-np.power(x, (1/H)))[0], self.t)
+        pf = anp.column_stack([x, 1-np.power(x, (H))])
         return pf
 
 
