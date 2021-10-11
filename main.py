@@ -11,21 +11,25 @@ from pymoo.factory import get_performance_indicator
 # tauT: maximum number of generation
 # tau : current generation
 # examples of nt and taut values
-nt_ = 5
-taut_ = 10
-tauT = 200
+nt_ = 20
+taut_ = 300
+tauT = 600
 
 
-algorithm = DNSGA2_a(pop_size=100)
+algorithm = DNSGA2_a(pop_size=200)
 problem = DMOP2(nt=nt_, taut=taut_)
 
+POF = []
 PF = []
+change_time = []
 
 
 # This call back is to store the result(pf) in each time the problem changes
 def callback(ex_algorithm):
-    if ex_algorithm.problem.has_changed:
-        PF.append(ex_algorithm.problem.get_pf_t())  # pareto_front()
+    if ex_algorithm.has_changed:
+        POF.append(ex_algorithm.problem.get_pf_t())  # Pareto Optimal front at time t
+        change_time.append(ex_algorithm.problem.tau)
+        print("Changed")
 
 
 algorithm.callback = callback
@@ -47,18 +51,17 @@ for algorithm in res.history:
     n_gen.append(algorithm.n_gen)
     opt = algorithm.opt
     cv.append(opt.get("CV").min())
-    feas = anp.where(opt.get("feasible"))[0]
-    _F = opt.get("F")[feas]
+    feasible = anp.where(opt.get("feasible"))[0]
+    _F = opt.get("F")[feasible]
     F.append(_F)
 
 igd = []
 # this is to calculate the IGD every time the problem changes.
 
-for idx, pf in enumerate(PF):
+for idx, pf in enumerate(POF):
     normalize = False
     metric = get_performance_indicator("igd", pf)
     igd = igd + [metric.do(f) for f in F[idx*taut_:(idx*taut_+taut_)]]
-
 print(anp.mean(igd))
 plt.plot(n_gen, igd, '-o', markersize=4, linewidth=2, color="green")
 plt.yscale("log")          # enable log scale if desired
@@ -67,9 +70,20 @@ plt.xlabel("Iteration")
 plt.ylabel("IGD")
 plt.show()
 
-# just plotting the PFs
+# just plotting the POFs
 plot = Scatter()
-for pf in PF:
+
+for pf in POF:
     plot.add(pf, plot_type="line", color="black", linewidth=2)
+
+for idx in change_time:
+    print(idx,len(F))
+    pf = F[idx-1]
+    plot.add(pf, color='red')
+
+# example
+# for pf in PF:
+#     plot.add(pf, plot_type="points", color='red')
+
 plot.show()
 
