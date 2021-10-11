@@ -12,6 +12,7 @@ class DNSGA2_a(NSGA2):
         self.sampling = FloatRandomSampling(self)
         self.sol_to_be_tested = None
         self.sol_to_be_new = None
+        self.has_changed = False
     # def _infill(self):
     #
     #     if self.sol_to_be_tested:
@@ -44,24 +45,26 @@ class DNSGA2_a(NSGA2):
         I = np.random.permutation(len(self.pop))[:10]
 
         pop_copy = Population.new(X=self.pop[I].get("X"))
-        self.evaluator.eval(self.problem, pop_copy)
+        self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=False)
 
         # detect change
         delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
 
         if delta != 0:
             self.problem.has_changed = True
+            self.has_changed = True
             pop_by_mating = self.mating.do(self.problem, self.pop,  int(self.n_offsprings * 0.8),  algorithm=self)
             pop_by_random = self.sampling.do(problem=self.problem, n_samples=int(self.n_offsprings * 0.2))
             pop = Population.merge(pop_by_random, pop_by_mating)
-            self.evaluator.eval(self.problem, pop, t=self.n_gen)
+            self.evaluator.eval(self.problem, pop, t=self.n_gen, skip_already_evaluated=False)
         else:
+            self.has_changed = False
             self.problem.has_changed = False
             pass
         # merge the offsprings with the current population
         if off is not None:
             self.pop = Population.merge(self.pop, off)
-            self.evaluator.eval(self.problem, self.pop, t=self.n_gen)
+            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=False)
 
         # execute the survival to find the fittest solutions
         self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
