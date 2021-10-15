@@ -3,6 +3,9 @@ from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.algorithms.moo.nsga2 import NSGA2
 import numpy as np
 
+from pymoo.core.callback import Callback
+from pymoo.factory import get_performance_indicator
+
 
 class DNSGA2_a(NSGA2):
 
@@ -12,7 +15,7 @@ class DNSGA2_a(NSGA2):
         self.sampling = FloatRandomSampling(self)
         self.sol_to_be_tested = None
         self.sol_to_be_new = None
-        self.has_changed = False
+#        self.has_changed = False
     # def _infill(self):
     #
     #     if self.sol_to_be_tested:
@@ -52,13 +55,11 @@ class DNSGA2_a(NSGA2):
 
         if delta != 0:
             self.problem.has_changed = True
-            self.has_changed = True
             pop_by_mating = self.mating.do(self.problem, self.pop,  int(self.n_offsprings * 0.8),  algorithm=self)
             pop_by_random = self.sampling.do(problem=self.problem, n_samples=int(self.n_offsprings * 0.2))
             pop = Population.merge(pop_by_random, pop_by_mating)
             self.evaluator.eval(self.problem, pop, t=self.n_gen, skip_already_evaluated=False)
         else:
-            self.has_changed = False
             self.problem.has_changed = False
             pass
         # merge the offsprings with the current population
@@ -68,3 +69,30 @@ class DNSGA2_a(NSGA2):
 
         # execute the survival to find the fittest solutions
         self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
+
+
+class calculate_MIGD(Callback):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.data["best"] = []
+        self.data["igd"] = []
+        self.data["POF"] = []
+        self.data["change_time"] = []
+        self.data["in_change_igd"] = []
+        self.data["PF"] = []
+        self.data["MIGD"] = -1
+
+    def notify(self, algorithm,  **kwargs):
+        pof = algorithm.problem.get_pf_t()
+        self.data["POF"].append(pof)  # Pareto Optimal front at time t
+        metric = get_performance_indicator("igd", pof)
+        approximated_pf = algorithm.opt.get("F")
+        igd = metric.do(approximated_pf)
+        self.data["igd"].append(igd)
+        if algorithm.problem.has_changed:
+            self.data["PF"].append(approximated_pf)
+            self.data["in_change_igd"].append(igd)
+            self.data["MIGD"] = np.sum(self.data["in_change_igd"])/len(self.data["in_change_igd"])
+            # TODO get PF when the change occurs or before it?
+            self.data["change_time"].append(algorithm.problem.tau)

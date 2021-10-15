@@ -135,6 +135,7 @@ class DIMP2b(DynamicMOP):
     def get_pf_t(self):
         return self._calc_pareto_front()
 
+
 class HE2b(DynamicMOP):
     """HE2 dynamic benchmark problem
     """
@@ -201,6 +202,7 @@ class HE7b(DynamicMOP):
     def get_pf_t(self):
         return self._calc_pareto_front()
 
+
 class HE9b(DynamicMOP):
     """HE9 dynamic benchmark problem
     """
@@ -230,6 +232,7 @@ class HE9b(DynamicMOP):
 
     def get_pf_t(self):
         return self._calc_pareto_front()
+
 
 class CEC2018(DynamicMOP):
     """HE9 dynamic benchmark problem
