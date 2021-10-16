@@ -86,6 +86,7 @@ class calculate_MIGD(Callback):
     def notify(self, algorithm,  **kwargs):
         pof = algorithm.problem.get_pf_t()
         self.data["POF"].append(pof)  # Pareto Optimal front at time t
+        #TODO We may calculate pof just when a change occurs and put the rest in another function
         metric = get_performance_indicator("igd", pof)
         approximated_pf = algorithm.opt.get("F")
         igd = metric.do(approximated_pf)

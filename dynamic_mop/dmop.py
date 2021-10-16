@@ -66,11 +66,10 @@ class FDA2_deb(DynamicMOP):
         H = 0.75 + 0.75 * np.sin(0.5*np.pi*self.t)
         H = 2 * np.sin(0.5 * np.pi * (self.t - 1))
         x = np.linspace(0.01, 1, n_pareto_points)
-# TODO Solve the inf result when x[0] = 0 and H(t)<0
+        # TODO Solve the inf result when x[0] = 0 and H(t)<0
         print(H, x[0], (1-np.power(x, (1/H)))[0], self.t)
         pf = anp.column_stack([x, 1-np.power(x, (H))])
         return pf
-
 
 
 class DMOP2(DynamicMOP):
@@ -112,9 +111,6 @@ class DIMP2b(DynamicMOP):
         self.xl[0] = 0.0
         self.xu = 2.0 * np.ones(self.n_var)
         self.xu[0] = 1.0
-
-#        self.xl = [0] + [-2] * 9
-#        self.xu = [1] + [2] * 9
 
     def get_current_t(self, t):
         self.tau = t
