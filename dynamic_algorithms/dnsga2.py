@@ -46,7 +46,6 @@ class DNSGA2_a(NSGA2):
         off = self.mating.do(self.problem, self.pop, self.n_offsprings, algorithm=self)
 
         I = np.random.permutation(len(self.pop))[:10]
-
         pop_copy = Population.new(X=self.pop[I].get("X"))
         self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=False)
 
@@ -61,7 +60,6 @@ class DNSGA2_a(NSGA2):
             self.evaluator.eval(self.problem, pop, t=self.n_gen, skip_already_evaluated=False)
         else:
             self.problem.has_changed = False
-            pass
         # merge the offsprings with the current population
         if off is not None:
             self.pop = Population.merge(self.pop, off)
