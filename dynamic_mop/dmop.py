@@ -81,14 +81,14 @@ class DMOP2(DynamicMOP):
                          nt=nt,
                          taut=taut)
 
-    def get_current_t(self, t):
-        self.tau = t
+    def get_current_t(self):
+        #self.tau = t
         t = 1 / self.nt
         t = t * floor(self.tau / self.taut)
         return t
 
     def _evaluate(self, X, out, *args, t=1, **kwargs):
-        self.t = self.get_current_t(t)
+        self.t = self.get_current_t()
         f1, f2 = dMOP2(X, self.t)
         out["F"] = [f1, f2]
 

@@ -51,7 +51,6 @@ class RM_MEDA(NSGA2):
             self.problem.has_changed = True
         else:
             self.problem.has_changed = False
-            pass
 
         infills = Population.merge(infills, self.pop)
 
@@ -96,7 +95,7 @@ def RMMEDA_operator(PopDec, K, M, XLow, XUpp):
     return OffspringDec
 
 
-def LocalPCA(PopDec, M, K):
+def LocalPCA(PopDec, M, K, max_iter=50):
     N, D = np.shape(PopDec)  # Dimensions
     Model = [{'mean': PopDec[k],  # The mean of the model
               'PI': np.eye(D),  # The matrix PI
@@ -106,7 +105,7 @@ def LocalPCA(PopDec, M, K):
               'b': []} for k in range(K)]  # The upper bound of the projections
 
     # Modeling
-    for iteration in range(1, 50):
+    for iteration in range(1, max_iter):
         # Calculate the distance between each solution and its projection in
         # affine principal subspace of each cluster
         distance = np.zeros((N, K))  # matrix of zeros N*K

@@ -7,6 +7,8 @@ from pymoo.optimize import minimize
 from pymoo.visualization.scatter import Scatter
 import matplotlib.pyplot as plt
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.core.evaluator import Evaluator
+
 
 # nt: severity of change
 # taut: frequency of change
@@ -17,10 +19,13 @@ nt_ = 5
 taut_ = 10
 tauT = 200
 
+evaluator = Evaluator(skip_already_evaluated=True)
+evaluator1 = Evaluator(skip_already_evaluated=True)
 
 algorithm = DNSGA2_a(pop_size=200)
-algorithm2 = RM_MEDA(pop_size=200)
-algorithm3 = NSGA2(pop_size=200)
+algorithm2 = RM_MEDA(pop_size=200, evaluator = evaluator1)
+algorithm3 = NSGA2(pop_size=200, evaluator = evaluator)
+
 
 problem = DMOP2(nt=nt_, taut=taut_)
 
@@ -30,19 +35,19 @@ res = minimize(problem,
                ("n_gen", tauT),
                verbose=False,
                callback=calculate_MIGD(),
-               seed=np.random.randint(1,1000))
+               seed=2)
 res2 = minimize(problem,
                algorithm2,
                ("n_gen", tauT),
                verbose=False,
                callback=calculate_MIGD(),
-               seed=np.random.randint(1,1000))
+               seed=2)
 res3 = minimize(problem,
                algorithm3,
                ("n_gen", tauT),
                verbose=False,
                callback=calculate_MIGD(),
-               seed=np.random.randint(1,1000))
+               seed=2)
 
 
 print(res.algorithm.callback.data["MIGD"])

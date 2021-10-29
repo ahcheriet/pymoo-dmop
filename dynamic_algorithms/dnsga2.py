@@ -71,7 +71,7 @@ class DNSGA2_a(NSGA2):
 
 class calculate_MIGD(Callback):
 
-    def __init__(self) -> None:
+    def __init__(self, static_alg=True) -> None:
         super().__init__()
         self.data["best"] = []
         self.data["igd"] = []
@@ -80,8 +80,11 @@ class calculate_MIGD(Callback):
         self.data["in_change_igd"] = []
         self.data["PF"] = []
         self.data["MIGD"] = -1
+        self.static_alg = static_alg
 
-    def notify(self, algorithm,  **kwargs):
+    def notify(self, algorithm, **kwargs):
+        algorithm.problem.tau = algorithm.n_gen
+#        algorithm.problem.t = algorithm.problem.get_current_t(tau)
         pof = algorithm.problem.get_pf_t()
         self.data["POF"].append(pof)  # Pareto Optimal front at time t
         #TODO We may calculate pof just when a change occurs and put the rest in another function
