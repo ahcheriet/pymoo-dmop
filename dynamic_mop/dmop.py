@@ -3,38 +3,7 @@ import numpy as np
 from pymoo.core.problem import Problem, ElementwiseProblem
 from dynamic_mop.functions import *
 from dynamic_mop.CEC2018 import *
-
-
-# TODO use an abstract class for all dynamic problems
-
-
-class DynamicMOP(ElementwiseProblem):
-    """
-    abstract class for a dynamic multi-objective problem
-
-    """
-
-    def __init__(self, n_var, n_obj, nt=5, taut=10, xl=0, xu=1):
-        super().__init__(n_var=n_var, n_obj=n_obj, xl=xl, xu=xu)
-        self.nt = nt
-        self.taut = taut
-        self.tau = 0 # current iteration
-        self.has_changed = False
-
-    def _evaluate(self, x, out, *args, **kwargs):
-        pass
-
-    def get_current_t(self, t):
-        self.tau = t
-        t = 1 / self.nt
-        t = t * np.floor(self.tau / self.taut)
-        return t
-
-    def _calc_pareto_front(self, n_pareto_points=100):
-        pass
-
-    def get_pf_t(self):
-        return self._calc_pareto_front()
+from dynamic_mop.DynamicMOP import  DynamicMOP
 
 
 class FDA2_deb(DynamicMOP):
@@ -229,24 +198,4 @@ class HE9b(DynamicMOP):
     def get_pf_t(self):
         return self._calc_pareto_front()
 
-
-class CEC2018(DynamicMOP):
-    """HE9 dynamic benchmark problem
-    """
-    def __init__(self, nt=10, taut=200, problemID='DF1'):
-        super().__init__(n_var=10,
-                         n_obj=2,
-                         xl=0,
-                         xu=1)
-        self.problemID = problemID
-        self.nt = nt
-        self.taut = taut
-        self.tau = 0 # current iteration
-
-    def _evaluate(self, X, out, *args, **kwargs):
-        f = cec2018_DF(problemID=self.problemID, x=X, tau=self.tau, nt=self.nt, taut=self.taut)
-        out["F"] = list(f)
-
-    def get_pf_t(self):
-        return self._calc_pareto_front()
 
