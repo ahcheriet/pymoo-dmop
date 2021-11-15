@@ -24,7 +24,7 @@ class CEC2018(DynamicMOP):
     def _evaluate(self, X, out, *args, **kwargs):
         self.t = self.get_current_t()
         f = cec2018_DF(problemID=self.problemID, x=X, t=self.t)
-        out["F"] = list(f)
+        out["F"] = list(f.values())
 
     def get_pf_t(self):
         return self._calc_pareto_front()

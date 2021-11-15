@@ -19,13 +19,13 @@ tauT = 100
 evaluator = Evaluator(skip_already_evaluated=True)
 evaluator1 = Evaluator(skip_already_evaluated=True)
 
-algorithm = DNSGA2_a(pop_size=200)
-#algorithm2 = RM_MEDA(pop_size=200, evaluator = evaluator1)
-#algorithm3 = NSGA2(pop_size=200, evaluator = evaluator)
+algorithm = DNSGA2_a(pop_size=100)
+algorithm2 = RM_MEDA(pop_size=200, evaluator = evaluator1)
+algorithm3 = NSGA2(pop_size=200, evaluator = evaluator)
 
 
 problem = CEC2018(problemID='DF1', nt=nt_, taut=taut_)
-
+#problem = DMOP2(nt=nt_,taut=taut_)
 
 res = minimize(problem,
                algorithm,
@@ -33,27 +33,27 @@ res = minimize(problem,
                verbose=False,
                callback=calculate_MIGD(),
                seed=2)
-# res2 = minimize(problem,
-#                algorithm2,
-#                ("n_gen", tauT),
-#                verbose=False,
-#                callback=calculate_MIGD(),
-#                seed=2)
-# res3 = minimize(problem,
-#                algorithm3,
-#                ("n_gen", tauT),
-#                verbose=False,
-#                callback=calculate_MIGD(),
-#                seed=2)
+res2 = minimize(problem,
+               algorithm2,
+               ("n_gen", tauT),
+               verbose=False,
+               callback=calculate_MIGD(),
+               seed=2)
+res3 = minimize(problem,
+               algorithm3,
+               ("n_gen", tauT),
+               verbose=False,
+               callback=calculate_MIGD(),
+               seed=2)
 
 
 print(res.algorithm.callback.data["MIGD"])
-# print(res2.algorithm.callback.data["MIGD"])
-# print(res3.algorithm.callback.data["MIGD"])
+print(res2.algorithm.callback.data["MIGD"])
+print(res3.algorithm.callback.data["MIGD"])
 
 plt.plot(np.arange(tauT), res.algorithm.callback.data["igd"], '-o', markersize=4, linewidth=2, color="green")
-# plt.plot(np.arange(tauT), res2.algorithm.callback.data["igd"], '-o', markersize=4, linewidth=2, color="red")
-# plt.plot(np.arange(tauT), res3.algorithm.callback.data["igd"], '-o', markersize=4, linewidth=2, color="blue")
+plt.plot(np.arange(tauT), res2.algorithm.callback.data["igd"], '-o', markersize=4, linewidth=2, color="red")
+plt.plot(np.arange(tauT), res3.algorithm.callback.data["igd"], '-o', markersize=4, linewidth=2, color="blue")
 plt.yscale("log")
 plt.title("Convergence")
 plt.xlabel("Iteration")

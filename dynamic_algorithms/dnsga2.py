@@ -51,9 +51,9 @@ class DNSGA2_a(NSGA2):
 
         # detect change
         delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
-
         if delta != 0:
             self.problem.has_changed = True
+            print("jjjjjjjjjjj")
             pop_by_mating = self.mating.do(self.problem, self.pop,  int(self.n_offsprings * 0.8),  algorithm=self)
             pop_by_random = self.sampling.do(problem=self.problem, n_samples=int(self.n_offsprings * 0.2))
             pop = Population.merge(pop_by_random, pop_by_mating)
