@@ -1,4 +1,5 @@
 from dynamic_mop import *
+from time import time
 from dynamic_algorithms import DNSGA2_a, calculate_MIGD, RM_MEDA
 from pymoo.optimize import minimize
 from pymoo.visualization.scatter import Scatter
@@ -12,6 +13,8 @@ from dynamic_mop.cec2018 import *
 # tauT: maximum number of generation
 # tau : current generation
 # examples of nt and taut values
+print("________Start__________")
+s = time()
 nt_ = 5
 taut_ = 5
 tauT = 100
@@ -20,8 +23,9 @@ evaluator = Evaluator(skip_already_evaluated=True)
 evaluator1 = Evaluator(skip_already_evaluated=True)
 
 algorithm = DNSGA2_a(pop_size=100)
-algorithm2 = RM_MEDA(pop_size=200, evaluator = evaluator1)
-algorithm3 = NSGA2(pop_size=200, evaluator = evaluator)
+algorithm2 = RM_MEDA(pop_size=200, dynamic=False)
+algorithm3 = RM_MEDA(pop_size=200, dynamic=True)
+#algorithm3 = NSGA2(pop_size=200, evaluator = evaluator)
 
 
 problem = CEC2018(problemID='DF1', nt=nt_, taut=taut_)
@@ -65,11 +69,12 @@ plot = Scatter()
 
 for pf in res.algorithm.callback.data["POF"]:
     plot.add(pf, plot_type="line", color="black", linewidth=2)
-
+#
 
 # for pf in res.algorithm.callback.data["PF"]:
-#     plot.add(pf, color='red')
+#      plot.add(pf, color='red')
 
 
 plot.show()
-
+e = time()
+print(e-s)

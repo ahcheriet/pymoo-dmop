@@ -9,6 +9,7 @@ class RM_MEDA(NSGA2):
 
     def __init__(self,
                  k=5,
+                 dynamic=True,
                  **kwargs):
         """
         Regularity Model-Based Multiobjective Estimation of Distribution Algorithm (RM-MEDA)
@@ -26,6 +27,7 @@ class RM_MEDA(NSGA2):
         super().__init__(**kwargs)
 
         self._K = k
+        self.dynamic = dynamic
 
     def _infill(self):
         pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
@@ -46,15 +48,19 @@ class RM_MEDA(NSGA2):
 
         # detect change
         delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
+        if self.dynamic:
+            if delta != 0:
+                self.problem.has_changed = True
+            else:
+                self.problem.has_changed = False
 
-        if delta != 0:
-            self.problem.has_changed = True
-        else:
-            self.problem.has_changed = False
+        if infills is not None:
+            self.pop = Population.merge(self.pop, infills)
+            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=False)
 
-        infills = Population.merge(infills, self.pop)
+        # execute the survival to find the fittest solutions
+        self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
 
-        self.pop = self.survival.do(self.problem, infills, n_survive=self.pop_size)
 
     def _set_optimum(self, **kwargs):
         if not has_feasible(self.pop):
