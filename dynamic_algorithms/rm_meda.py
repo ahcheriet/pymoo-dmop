@@ -1,8 +1,80 @@
+import warnings
+warnings.filterwarnings('ignore')
 import numpy as np
+import pandas as pd
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.nsga3 import NSGA3
+from pymoo.algorithms.moo.moead import MOEAD
 from pymoo.core.population import Population
 from pymoo.docs import parse_doc_string
 from pymoo.util.misc import has_feasible
+from copulas.multivariate import VineCopula
+from pymoo.factory import get_reference_directions
+
+ref_dirs = get_reference_directions("das-dennis", 2, n_partitions=12)
+
+# create the algorithm object
+
+class EMT_CEDA(NSGA2):
+
+    def __init__(self,
+                 k=5,
+                 dynamic=True,
+                 **kwargs):
+        """
+
+        Parameters
+        ----------
+        """
+
+        super().__init__( ref_dirs=ref_dirs,**kwargs)
+
+        self.dynamic = dynamic
+
+    def _infill(self):
+        pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
+        xl, xu = self.problem.bounds()
+        X = pop.get("X")
+        #X = self.opt.get("X")
+        data = pd.DataFrame(X)
+#        center = VineCopula('center')
+        regular = VineCopula('regular')
+#        direct = VineCopula('direct')
+
+#        center.fit(data)
+        regular.fit(data, truncated=5)
+#        direct.fit(data)
+
+#        center_samples = center.sample(1000)
+        Sample = regular.sample(100)
+#        direct_samples = direct.sample(1000)
+        Xp= Sample.to_numpy()
+
+        # create the population to proceed further
+        off = Population.new(X=Xp)
+
+        return off
+
+    def _advance(self, infills=None, **kwargs):
+
+        if self.dynamic:
+            I = np.random.permutation(len(self.pop))[:10]
+            pop_copy = Population.new(X=self.pop[I].get("X"))
+            self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=self.dynamic)
+
+            # detect change
+            delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
+            if delta != 0:
+                self.problem.has_changed = True
+            else:
+                self.problem.has_changed = False
+
+        if infills is not None:
+            self.pop = Population.merge(self.pop, infills)
+            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=self.dynamic)
+
+        # execute the survival to find the fittest solutions
+        self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
 
 
 class RM_MEDA(NSGA2):
@@ -28,12 +100,18 @@ class RM_MEDA(NSGA2):
 
         self._K = k
         self.dynamic = dynamic
+        self.Models = []
+        self.probabilities = []
+        self.tracks = []
 
     def _infill(self):
         pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
         xl, xu = self.problem.bounds()
         X = pop.get("X")
-        Xp = RMMEDA_operator(X, self._K, self.problem.n_obj, xl, xu)
+        # Modeling
+        Model, probability = LocalPCA(X, self.problem.n_obj, self._K)
+        # Sampling
+        Xp = RMMEDA_operator(X, len(X), self._K, self.problem.n_obj, Model, probability, xl, xu)
 
         # create the population to proceed further
         off = Population.new(X=Xp)
@@ -42,23 +120,24 @@ class RM_MEDA(NSGA2):
 
     def _advance(self, infills=None, **kwargs):
 
-        I = np.random.permutation(len(self.pop))[:10]
-        pop_copy = Population.new(X=self.pop[I].get("X"))
-        self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=False)
-
-        # detect change
-        delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
         if self.dynamic:
-            if delta != 0:
-                self.problem.has_changed = True
-            else:
-                self.problem.has_changed = False
+            I = np.random.permutation(len(self.pop))[:10]
+            pop_copy = Population.new(X=self.pop[I].get("X"))
+            self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=not self.dynamic)
+
+            # detect change
+            delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
+            if self.dynamic:
+                if delta != 0:
+                    self.problem.has_changed = True
+                else:
+                    self.problem.has_changed = False
 
         if infills is not None:
             self.pop = Population.merge(self.pop, infills)
-            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=False)
+            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=not self.dynamic)
 
-        # execute the survival to find the fittest solutions
+        # execute the survival to find the fittest solutions, selecting P_{t+1} using NDS
         self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
 
 
@@ -69,14 +148,102 @@ class RM_MEDA(NSGA2):
             self.opt = self.pop[self.pop.get("rank") == 0]
 
 
-def RMMEDA_operator(PopDec, K, M, XLow, XUpp):
+
+class ETM_RM_MEDA(NSGA2):
+
+    def __init__(self,
+                 samples_t=20,
+                 nbr_previous=4,
+                 k=5,
+                 dynamic=True,
+                 **kwargs):
+        """
+        Regularity Model-Based Multiobjective Estimation of Distribution Algorithm (RM-MEDA)
+
+        Parameters
+        ----------
+        n_offsprings : int
+            The number of individuals created in each iteration.
+        pop_size : int
+            The number of individuals which are surviving from the offspring population (non-elitist)
+        k: int
+            Parameter of the rm_meda algorithm number of cluster
+        """
+
+        super().__init__(**kwargs)
+
+        self._K = k
+        self.dynamic = dynamic
+        self.Models = []
+        self.probabilities = []
+        self.tracks = []
+        self.samples_t = samples_t
+        self.nbr_previous = nbr_previous
+
+    def _infill(self):
+        pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
+        xl, xu = self.problem.bounds()
+        X = pop.get("X")
+        # Modeling
+        Model, probability = LocalPCA(X, self.problem.n_obj, self._K)
+        self.Models.append(Model)
+        self.probabilities.append(probability)
+        # Sampling
+        Xp = RMMEDA_operator(X, len(X), self._K, self.problem.n_obj, Model, probability, xl, xu)
+
+        # create the population to proceed further
+        off = Population.new(X=Xp)
+        track = self.tracks
+        if len(self.tracks)>self.nbr_previous:
+            Slice = -1*self.nbr_previous
+            track = self.tracks[Slice:]
+        for i in track:
+            X_tmp = RMMEDA_operator(X, self.samples_t, self._K, self.problem.n_obj, self.Models[i-1], self.probabilities[i-1], xl, xu)
+            off_tmp = Population.new(X=X_tmp)
+            off = Population.merge(off_tmp, off)
+
+        return off
+
+    def _advance(self, infills=None, **kwargs):
+
+        if self.dynamic:
+            I = np.random.permutation(len(self.pop))[:10]
+            pop_copy = Population.new(X=self.pop[I].get("X"))
+            self.evaluator.eval(self.problem, pop_copy, t=self.n_gen, skip_already_evaluated=not self.dynamic)
+
+            # detect change
+            delta = np.abs(pop_copy.get("F") - self.pop[I].get("F")).mean()
+            if self.dynamic:
+                if delta != 0:
+                    self.problem.has_changed = True
+                    self.tracks.append(self.problem.tau)
+                else:
+                    self.problem.has_changed = False
+
+        if infills is not None:
+            self.pop = Population.merge(self.pop, infills)
+            self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=not self.dynamic)
+
+        # execute the survival to find the fittest solutions, selecting P_{t+1} using NDS
+        self.pop = self.survival.do(self.problem, self.pop, n_survive=self.pop_size, algorithm=self)
+
+
+    def _set_optimum(self, **kwargs):
+        if not has_feasible(self.pop):
+            self.opt = self.pop[[np.argmin(self.pop.get("CV"))]]
+        else:
+            self.opt = self.pop[self.pop.get("rank") == 0]
+
+
+
+def RMMEDA_operator(PopDec, n_ind, K, M, Model, probability, XLow, XUpp):
     N, D = PopDec.shape
     ## Modeling
-    Model, probability = LocalPCA(PopDec, M, K)
     ## Reproduction
+#    N = n_ind
     OffspringDec = np.zeros((N, D))
     # Generate new trial solutions one by one
-    for i in np.arange(N):
+    for i in np.arange(n_ind):
         # Select one cluster by Roulette-wheel selection
         k = (np.where(np.random.rand() <= probability))[0][0]
         # Generate one offspring
