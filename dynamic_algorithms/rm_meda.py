@@ -10,6 +10,8 @@ from pymoo.docs import parse_doc_string
 from pymoo.util.misc import has_feasible
 from copulas.multivariate import VineCopula
 from pymoo.factory import get_reference_directions
+from scipy.special import kl_div
+from scipy.spatial import cKDTree as KDTree
 
 ref_dirs = get_reference_directions("das-dennis", 2, n_partitions=12)
 
@@ -180,6 +182,26 @@ class ETM_RM_MEDA(NSGA2):
         self.samples_t = samples_t
         self.nbr_previous = nbr_previous
 
+    def get_best_model(self, models, probability, Y):
+        kl_divs = []
+        XX = []
+        track = self.tracks
+        xl, xu = self.problem.bounds()
+        Xp = RMMEDA_operator(Y, len(Y), self._K, self.problem.n_obj, models[0], probability, xl, xu)
+        if len(self.tracks)>self.nbr_previous:
+            Slice = -1*self.nbr_previous
+            track = self.tracks[Slice:]
+        for i in track:
+            X_tmp = RMMEDA_operator(Y, self.samples_t, self._K, self.problem.n_obj, self.Models[i-1], self.probabilities[i-1], xl, xu)
+            XX.append(X_tmp)
+            kl_val = kl_div(X_tmp, Y)
+            kl_divs.append(kl_val)
+        if len(kl_divs)<1:
+            return Xp
+        else:
+            index = np.argmin(kl_divs)
+        return XX[index]
+
     def _infill(self):
         pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
         xl, xu = self.problem.bounds()
@@ -201,7 +223,7 @@ class ETM_RM_MEDA(NSGA2):
             X_tmp = RMMEDA_operator(X, self.samples_t, self._K, self.problem.n_obj, self.Models[i-1], self.probabilities[i-1], xl, xu)
             off_tmp = Population.new(X=X_tmp)
             off = Population.merge(off_tmp, off)
-
+        off = Population.new(X=self.get_best_model([Model], probability, X))
         return off
 
     def _advance(self, infills=None, **kwargs):
@@ -338,3 +360,52 @@ def LocalPCA(PopDec, M, K, max_iter=50):
     return Model, probability
 
 # parse_doc_string(rm_meda.__init__)
+# https://mail.python.org/pipermail/scipy-user/2011-May/029521.html
+
+def KLdivergence(x, y):
+  """Compute the Kullback-Leibler divergence between two multivariate samples.
+
+  Parameters
+  ----------
+  x : 2D array (n,d)
+    Samples from distribution P, which typically represents the true
+    distribution.
+  y : 2D array (m,d)
+    Samples from distribution Q, which typically represents the approximate
+    distribution.
+
+  Returns
+  -------
+  out : float
+    The estimated Kullback-Leibler divergence D(P||Q).
+
+  References
+  ----------
+  Pérez-Cruz, F. Kullback-Leibler divergence estimation of
+continuous distributions IEEE International Symposium on Information
+Theory, 2008.
+  """
+
+  # Check the dimensions are consistent
+  x = np.atleast_2d(x)
+  y = np.atleast_2d(y)
+
+  n,d = x.shape
+  m,dy = y.shape
+
+  assert(d == dy)
+
+
+  # Build a KD tree representation of the samples and find the nearest neighbour
+  # of each point in x.
+  xtree = KDTree(x)
+  ytree = KDTree(y)
+
+  # Get the first two nearest neighbours for x, since the closest one is the
+  # sample itself.
+  r = xtree.query(x, k=2, eps=.01, p=2)[0][:,1]
+  s = ytree.query(x, k=1, eps=.01, p=2)[0]
+
+  # There is a mistake in the paper. In Eq. 14, the right side misses a negative sign
+  # on the first term of the right hand side.
+  return -np.log(r/s).sum() * d / n + np.log(m / (n - 1.))

@@ -13,7 +13,7 @@ class CEC2018(DynamicMOP):
         self.problemID = problemID
         self.nt = nt
         self.taut = taut
-        self.tau = 0 # current iteration
+        self.tau = 1 # current iteration
         self.xl, self.xu = get_bounds(problem_id=problemID, n_vars=10) # n_vars = 10 from the CEC2018 Competition
 
     def _calc_pareto_front(self, n_pareto_points=100):

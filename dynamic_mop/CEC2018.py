@@ -1,10 +1,10 @@
 # The code is translated from Matlab by ahcheriet@gmail.com
 # ========================================================|#
-# The 14 test functions are for cec2018 competition on    |
+# The 14 tests functions are for cec2018 competition on    |
 # dynamic multiobjective optimisation. This document is   |
 # free to disseminate for academic use.                   |
 # --------------------------------------------------------|#
-# The "time" term in the test suite is defined as:        |
+# The "time" term in the tests suite is defined as:        |
 #          t=1/nt*floor(tau/taut)                         |
 # where - nt:    severity of change                       |
 #       - taut:  frequency of change                      |
@@ -17,7 +17,7 @@
 
 # cec2018_DF(probID, x, tau, taut, nt)
 # INPUT:
-#       probID: test problem identifier (i.e. 'DF1')
+#       probID: tests problem identifier (i.e. 'DF1')
 #       x:      variable vector
 #       tau:    current generation counter
 #       taut:   frequency of change
@@ -98,7 +98,7 @@ def get_bounds(problem_id='DF1',n_vars=10):
 
 def cec2018_DF(problemID='DF1', x=None, t=None):
     # INPUT:
-    #       probID: test problem identifier (i.e. 'DF1')
+    #       probID: tests problem identifier (i.e. 'DF1')
     #       x:      variable vector
     #       tau:    current generation counter
     #       taut:   frequency of change
@@ -110,7 +110,6 @@ def cec2018_DF(problemID='DF1', x=None, t=None):
     # the first change occurs after T0 generations, that is, the
     # generation at which a change occurs is (T0+1), (T0+taut+1), etc.
 
-    T0 = 50
     # calculate time instant
     n = len(x)
     f = {}
@@ -119,20 +118,20 @@ def cec2018_DF(problemID='DF1', x=None, t=None):
         H = 0.75 * sin(0.5 * pi * t) + 1.25
         g = 1 + sum((x[1:] - G) ** 2)
         f[0] = x[0]
-        f[1] = g * power(1 - (x[0] / g), H)
+        f[1] = g * (1 - power(x[0] / g,H))
     if problemID == 'DF2':
         G = abs(sin(0.5 * pi * t))
-        r = 1 + floor((n - 1) * G)
+        r = floor((n - 1) * G)
         tmp = setdiff1d(range(0, n), [int(r)])
         g = 1 + sum([(x[int(index)] - G) ** 2 for index in tmp])
-        f[0] = x[int(r-1)]
-        f[1] = g * (power(1 - (x[int(r-1)] / g), 0.5))
+        f[0] = x[int(r)]
+        f[1] = g * (1 - power(x[int(r)] / g,0.5))
     if problemID == 'DF3':
         G = sin(0.5 * pi * t)
         H = G + 1.5
-        g = 1 + sum(power(x[1:] - G - x[0], H) ** 2)
+        g = 1 + sum(power(x[1:] - G - power(x[0], H), 2))
         f[0] = x[0]
-        f[1] = g * power(1 - (x[0] / g), H)
+        f[1] = g * (1 - power(x[0] / g, H))
     if problemID == 'DF4':
         a = sin(0.5 * pi * t)
         b = 1 + abs(cos(0.5 * pi * t))
@@ -166,7 +165,7 @@ def cec2018_DF(problemID='DF1', x=None, t=None):
         tmp = G * sin(power(4 * pi * x[0], b)) / (1 + abs(G))
         g = 1 + sum((x[1:] - tmp) ** 2)
         f[0] = g * (x[0] + 0.1 * sin(3 * pi * x[0]))
-        f[1] = g * power(1 - x[1] + 0.1 * sin(3 * pi * x[1]), a)
+        f[1] = g * power(1 - x[0] + 0.1 * sin(3 * pi * x[0]), a)
     if problemID == 'DF9':
         N = 1 + floor(10 * abs(sin(0.5 * pi * t)))
         g = 1
@@ -178,11 +177,11 @@ def cec2018_DF(problemID='DF1', x=None, t=None):
     if problemID == 'DF10':
         G = sin(0.5 * pi * t)
         H = 2.25 + 2 * cos(0.5 * pi * t)
-        tmp = sin(2 * pi * (x[0] + x[1])) / (1 + abs(G))
+        tmp = sin(4 * pi * (x[0] + x[1])) / (1 + abs(G)) # in the document is 2*
         g = 1 + sum((x[2:] - tmp) ** 2)
         f[0] = g * power(sin(0.5 * pi * x[0]), H)
-        f[1] = g * power(sin(0.5 * pi * x[1]), H) * power(cos(0.5 * pi * x[0]), H)
-        f[2] = g * power(cos(0.5 * pi * x[1]), H) * power(cos(0.5 * pi * x[0]), H)
+        f[1] = g * power(sin(0.5 * pi * x[1])*cos(0.5 * pi * x[0]), H)
+        f[2] = g * power(cos(0.5 * pi * x[1])*cos(0.5 * pi * x[0]), H)
     if problemID == 'DF11':
         G = abs(sin(0.5 * pi * t))
         g = 1 + G + sum((x[2:] - 0.5 * G * x[0]) ** 2)
@@ -197,7 +196,7 @@ def cec2018_DF(problemID='DF1', x=None, t=None):
         g = 1 + sum(tmp1 ** 2) + prod(tmp2)
         f[0] = g * cos(0.5 * pi * x[1]) * cos(0.5 * pi * x[0])
         f[1] = g * sin(0.5 * pi * x[1]) * cos(0.5 * pi * x[0])
-        f[2] = g * sin(0.5 * pi * x[1])
+        f[2] = g * sin(0.5 * pi * x[0])
     if problemID == 'DF13':
         G = sin(0.5 * pi * t);
         p = floor(6 * G);
@@ -225,11 +224,11 @@ true = True
 # cec2018_pf.m
 
 # ========================================================|#
-# PF calculation for 14 cec2018 test functions on         |
+# PF calculation for 14 cec2018 tests functions on         |
 # dynamic multiobjective optimisation. This document is   |
 # free to disseminate for academic use.                   |
 # --------------------------------------------------------|#
-# The "time" term in the test suite is defined as:        |
+# The "time" term in the tests suite is defined as:        |
 #          t=1/nt*floor(tau/taut)                         |
 # where - nt:    severity of change                       |
 #       - taut:  frequency of change                      |
@@ -243,7 +242,7 @@ true = True
 
 def cec2018_DF_PF(probID=None, t=1, n_points=100, *args, **kwargs):
     # INPUT:
-    #       probID: test problem identifier (i.e. 'DF1')
+    #       probID: tests problem identifier (i.e. 'DF1')
     #       tau:    current generation counter
     #       taut:   frequency of change
     #       nt:     severity of change
