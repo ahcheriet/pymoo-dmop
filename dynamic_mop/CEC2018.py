@@ -28,6 +28,8 @@
 #
 import numpy as np
 from numpy import sin, cos, power, setdiff1d, exp, floor, pi, arange, prod
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+
 
 
 def get_bounds(problem_id='DF1',n_vars=10):
@@ -371,6 +373,7 @@ def cec2018_DF_PF(probID=None, t=1, n_points=100, *args, **kwargs):
 
 
 def get_PF(f=None, nondominate=None, *args, **kwargs):
+    nds = NonDominatedSorting()
     ncell = len(f)
     s = np.size(f[1])
     h = []
@@ -381,9 +384,8 @@ def get_PF(f=None, nondominate=None, *args, **kwargs):
     h = np.reshape(h,(s,ncell))
 
     if nondominate:
+        fronts = nds.do(F=h,only_non_dominated_front=True)
+        print(fronts[0])
         print("Run Non dominating Sorting")
-        h = []
-        pass
-    #     in_ = get_skyline(h)
-    #     h = h(in_, arange())
+        h = h[fronts]
     return h
