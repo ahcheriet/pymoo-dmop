@@ -274,12 +274,12 @@ def cec2018_DF_PF(probID=None, t=1, n_points=100, *args, **kwargs):
         f2 = dot(g, (1 - (x / g) ** H))
         h = get_PF(np.array([f1, f2]), false)
     if 'DF4' == (probID):
-        a = sin(dot(dot(0.5, pi), t))
-        b = 1 + abs(cos(dot(dot(0.5, pi), t)))
-        x = np.linspace(a, a + b)
+        a = sin(0.5*pi*t)
+        b = 1 + abs(cos(0.5*pi*t))
+        x = np.linspace(a, a + b, n_points)
         H = 1.5 + a
-        f1 = dot(g, abs(x - a) ** H)
-        f2 = dot(g, abs(x - a - b) ** H) # Maybe
+        f1 = g*abs(x - a) ** H
+        f2 = g*abs(x - a - b) ** H # Maybe
         h = get_PF(np.array([f1, f2]), false)
     if 'DF5' == (probID):
         x = np.linspace(0, 1, n_points)
@@ -306,19 +306,13 @@ def cec2018_DF_PF(probID=None, t=1, n_points=100, *args, **kwargs):
         f1 = dot(g, (x + dot(0.1, sin(dot(dot(3, pi), x)))))
         f2 = dot(g, (1 - x + dot(0.1, sin(dot(dot(3, pi), x)))) ** a)
         h = get_PF(np.array([f1, f2]), false)
-    if 'DF9' == (probID):
+    if 'DF9' == probID:
         x = np.linspace(0, 1, n_points)
-#        N = 1 + floor(dot(10, abs(sin(dot(dot(0.5, pi), t)))))
-
         N=1+floor(10*abs(sin(0.5*pi*t)))
-        print(max(0,max((0.1+0.5/N)*sin(2*N*pi*x))))
-        f1=g*(x+max(0, max((0.1+0.5/N)*sin(2*N*pi*x))))
-        f2=g*(1-x+max(0, max((0.1+0.5/N)*sin(2*N*pi*x))))
-
-#        f1 = dot(g, (x + max(0, dot((0.1 + 0.5 / N), sin(dot(dot(dot(2, N), pi), x))))))
-#        f2 = dot(g, (1 - x + max(0, dot((0.1 + 0.5 / N), sin(dot(dot(dot(2, N), pi), x))))))
+        f1=g*(x+max(0, (0.1+0.5/N)*sin(2*N*pi*x)))
+        f2=g*(1-x+max(0, (0.1+0.5/N)*sin(2*N*pi*x)))
         h = get_PF(np.array([f1, f2]), true)
-    if 'DF10' == (probID):
+    if 'DF10' == probID:
         x1, x2 = np.meshgrid(np.linspace(0,1,H),np.linspace(0,1,H), indexing='xy')
         H = 2.25 + dot(2, cos(dot(dot(0.5, pi), t)))
         f1 = dot(g, sin(dot(dot(0.5, pi), x1)) ** H)

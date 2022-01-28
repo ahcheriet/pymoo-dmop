@@ -34,7 +34,7 @@ algorithm4 = DNSGA2_a(pop_size=100) # black
 #problem = CEC2018(problemID='DF1', nt=nt_, taut=taut_)
 #problem = get_problem("zdt1")
 
-problem = CEC2018(problemID='DF3', nt=nt_, taut=taut_)
+problem = CEC2018(problemID='DF1', nt=nt_, taut=taut_)
 calculate=calculate_MIGD()
 res = minimize(problem,
                algorithm,

@@ -11,7 +11,7 @@ from dynamic_mop.cec2018 import *
 problems = [
     ('DF1',[10,5]),('DF2',[10,5]),('DF3',[10,5]),('DF4',[10,5]),('DF5',[10,5]),('DF5', [10, 5]),
     ('DF6', [10, 5]), ('DF7', [10, 5]), ('DF8', [10, 5]), ('DF9', [10, 5]), ('DF10', [10, 5]),
-    ('DF11', [10, 5]), ('DF12', [10, 5]), ('DF13', [10, 5])
+    ('DF11', [10, 5]), ('DF12', [10, 5]), ('DF13', [10, 5]),('DF14', [10, 5])
 ]
 
 
@@ -40,11 +40,11 @@ def load(name, suffix=[]):
     try:
         F = anp.loadtxt(os.path.join(path, "%s.f" % name))
 
-        CV = None
-        if os.path.exists(os.path.join(path, "%s.cv" % name)):
-            CV = anp.loadtxt(os.path.join(path, "%s.cv" % name))
+        PF = None
+        if os.path.exists(os.path.join(path, "%s.pf" % name)):
+            PF = anp.loadtxt(os.path.join(path, "%s.pf" % name))
 
     except:
         return X, None, None
 
-    return X, F, CV
+    return X, F, PF

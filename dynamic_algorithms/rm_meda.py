@@ -137,6 +137,8 @@ class RM_MEDA(NSGA2):
 
         if infills is not None:
             self.pop = Population.merge(self.pop, infills)
+            # if self.problem.has_changed:
+            #     self.pop = Reinitialize Randomly
             self.evaluator.eval(self.problem, self.pop, t=self.n_gen, skip_already_evaluated=not self.dynamic)
 
         # execute the survival to find the fittest solutions, selecting P_{t+1} using NDS
@@ -191,16 +193,20 @@ class ETM_RM_MEDA(NSGA2):
         if len(self.tracks)>self.nbr_previous:
             Slice = -1*self.nbr_previous
             track = self.tracks[Slice:]
-        for i in track:
+        for i in self.tracks:
             X_tmp = RMMEDA_operator(Y, self.samples_t, self._K, self.problem.n_obj, self.Models[i-1], self.probabilities[i-1], xl, xu)
             XX.append(X_tmp)
             kl_val = kl_div(X_tmp, Y)
-            kl_divs.append(kl_val)
+            ccc = np.nan_to_num(kl_val, posinf=10, neginf=-10)
+            val = sum(np.average(ccc, axis=0))
+
+            kl_divs.append(val)
         if len(kl_divs)<1:
             return Xp
         else:
-            index = np.argmin(kl_divs)
-        return XX[index]
+            index_max = np.argmax(kl_divs)
+            index_min = np.argmin(kl_divs)
+        return np.concatenate([XX[index_max],XX[index_min]])
 
     def _infill(self):
         pop, len_pop, len_off = self.pop, self.pop_size, self.n_offsprings
